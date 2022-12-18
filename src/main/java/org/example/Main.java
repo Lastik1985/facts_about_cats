@@ -14,33 +14,23 @@ import java.util.List;
 
 
 public class Main {
-    public static void main(String[] args) {
-        String url = "https://raw.githubusercontent.com/netology-code/jd-homeworks/master/http/task1/cats";
-        List<Cats> CatsList = getContent(url);
-        CatsList.stream().filter(value -> value.getUpvotes() != null && Integer.parseInt(value.getUpvotes()) > 0)
-                .forEach(System.out::println);
-    }
+    public static final String REMOTE_SERVICE_URI =
+            "https://raw.githubusercontent.com/netology-code/jd-homeworks/master/http/task1/cats";
+    public static final ObjectMapper mapper = new ObjectMapper();
 
-    static List<Cats> getContent(String url) {
-        CloseableHttpResponse response;
-        ObjectMapper mapper = new ObjectMapper();
-        List<Cats> list = new ArrayList<>();
-        try (CloseableHttpClient httpClient = HttpClientBuilder.create()
+    public static void main(String[] args) throws IOException {
+        CloseableHttpClient httpClient = HttpClientBuilder.create()
                 .setDefaultRequestConfig(RequestConfig.custom()
                         .setConnectTimeout(5000)
                         .setSocketTimeout(30000)
                         .setRedirectsEnabled(false)
                         .build())
-                .build()) {
-            HttpGet request = new HttpGet(url);
-            response = httpClient.execute(request);
-            list = mapper.readValue(response.getEntity().getContent(), new TypeReference<>() {
-            });
-            response.close();
-        } catch (IOException e) {
-            System.out.println(e.getMessage());
-        }
-        return list;
-
+                .build();
+        HttpGet request = new HttpGet(REMOTE_SERVICE_URI);
+        CloseableHttpResponse response = httpClient.execute(request);
+        List<Cats> cats = mapper.readValue(response.getEntity().getContent(),
+                new TypeReference<>() {});
+        cats.stream().filter(value -> value.getUpvotes() != null && Integer.parseInt(value.getUpvotes()) > 0)
+                .forEach(System.out::println);
     }
 }
